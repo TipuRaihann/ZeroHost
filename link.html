@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZeroHost - Hosted Site</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #111;
+      overflow: auto;
+    }
+    #app {
+      min-height: 100vh;
+    }
+    h2, h1 {
+      text-align: center;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main" aria-live="polite">
+    <h2>Loading site...</h2>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOnz21ibc6Y0AGhsc5k5cNrnxm2HVnP10",
+      authDomain: "zero-host.firebaseapp.com",
+      projectId: "zero-host",
+      storageBucket: "zero-host.appspot.com",
+      messagingSenderId: "528079836587",
+      appId: "1:528079836587:web:098e3c18b90e6b77c66eee",
+      measurementId: "G-F3DP7N7QQQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const appDiv = document.getElementById("app");
+    const urlParams = new URLSearchParams(window.location.search);
+    const slug = urlParams.get("slug");
+
+    if (!slug) {
+      appDiv.innerHTML = "<h1>Error: No slug provided.</h1>";
+      throw new Error("No slug in URL");
+    }
+
+    async function loadSite(slug) {
+      try {
+        const q = query(collection(db, "pages"), where("slug", "==", slug));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          appDiv.innerHTML = "<h1>404 - Site Not Found</h1>";
+          return;
+        }
+
+        const doc = snapshot.docs[0].data();
+        const branches = ["main", "master"];
+        let html = null;
+
+        for (const branch of branches) {
+          try {
+            const rawUrl = `https://raw.githubusercontent.com/${doc.owner}/${doc.repo}/${branch}/index.html`;
+            const res = await fetch(rawUrl);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            html = await res.text();
+            break;
+          } catch {
+            // try next branch
+          }
+        }
+
+        if (!html) {
+          appDiv.innerHTML = "<h1>Could not fetch index.html from repo.</h1>";
+          return;
+        }
+
+        appDiv.innerHTML = html;
+      } catch (e) {
+        appDiv.innerHTML = `<h1>Error loading site:</h1><p>${e.message}</p>`;
+      }
+    }
+
+    loadSite(slug);
+  </script>
+</body>
+</html>
