@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZeroHost - GitHub Repo Host & Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 6px;
+      background: black;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .repo {
+      border: 1px solid #ccc;
+      margin: 6px 0;
+      padding: 8px;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, GithubAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOnz21ibc6Y0AGhsc5k5cNrnxm2HVnP10",
+      authDomain: "zero-host.firebaseapp.com",
+      projectId: "zero-host",
+      storageBucket: "zero-host.appspot.com",
+      messagingSenderId: "528079836587",
+      appId: "1:528079836587:web:098e3c18b90e6b77c66eee",
+      measurementId: "G-F3DP7N7QQQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GithubAuthProvider();
+    const db = getFirestore(app);
+
+    const appDiv = document.getElementById("app");
+    const urlParams = new URLSearchParams(window.location.search);
+    const slug = urlParams.get("slug");
+
+    if (slug) {
+      // Viewer mode
+      showViewer(slug);
+    } else {
+      // Login + repo list mode
+      showLogin();
+    }
+
+    async function showLogin() {
+      appDiv.innerHTML = `
+        <h1>ZeroHost</h1>
+        <h2>GitHub Repo Host & Viewer</h2>
+        <button id="loginBtn">Login with GitHub</button>
+        <div id="repoList"></div>
+      `;
+
+      const loginBtn = document.getElementById("loginBtn");
+      const repoListDiv = document.getElementById("repoList");
+
+      loginBtn.onclick = async () => {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const token = result._tokenResponse.oauthAccessToken;
+          const user = result.user;
+          loginBtn.style.display = 'none';
+
+          const res = await fetch("https://api.github.com/user/repos", {
+            headers: { Authorization: `token ${token}` }
+          });
+          const repos = await res.json();
+
+          repoListDiv.innerHTML = "";
+          repos.forEach(repo => {
+            const div = document.createElement("div");
+            div.className = "repo";
+            div.innerHTML = `
+              <strong>${repo.full_name}</strong><br />
+              <button data-owner="${repo.owner.login}" data-name="${repo.name}">Generate Link</button>
+            `;
+            repoListDiv.appendChild(div);
+          });
+
+          document.querySelectorAll("button[data-owner]").forEach(btn => {
+            btn.onclick = async () => {
+              const slug = Math.random().toString(36).substring(2, 8);
+              await addDoc(collection(db, "pages"), {
+                slug,
+                owner: btn.dataset.owner,
+                repo: btn.dataset.name,
+                user: user.email,
+                createdAt: new Date()
+              });
+              alert(`Your sharable link is:\n${window.location.origin}?slug=${slug}`);
+            };
+          });
+        } catch (error) {
+          alert("Error logging in or fetching repos: " + error.message);
+        }
+      };
+    }
+
+    async function showViewer(slug) {
+      appDiv.innerHTML = "<h2>Loading site...</h2>";
+      // Find page data from Firestore
+      const snapshot = await getDocs(collection(db, "pages"));
+      let match = null;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.slug === slug) match = data;
+      });
+
+      if (!match) {
+        appDiv.innerHTML = "<h1>404 - Not Found</h1>";
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/${match.owner}/${match.repo}/main/index.html`);
+        if (!res.ok) throw new Error("Could not fetch index.html from repo");
+        const html = await res.text();
+        appDiv.innerHTML = html;
+      } catch (e) {
+        appDiv.innerHTML = `<h1>Error loading site:</h1><p>${e.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
