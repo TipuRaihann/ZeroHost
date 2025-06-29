@@ -1,27 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ZeroHost - GitHub Repo Host & Viewer</title>
   <style>
+    /* Reset and base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f0f0f0;
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #121212;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem;
+    }
+    #app {
+      max-width: 600px;
+      width: 100%;
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    h1, h2 {
+      margin: 0 0 1rem 0;
+      font-weight: 700;
+      color: #ff6f61;
+      text-align: center;
+    }
+    h2 {
+      font-weight: 500;
+      margin-bottom: 2rem;
+      color: #ff8a75;
     }
     button {
-      padding: 8px 12px;
-      margin-top: 6px;
-      background: black;
-      color: white;
+      background-color: #ff6f61;
       border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1.2rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: white;
       cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: block;
+      margin: 0 auto 2rem auto;
+      width: 100%;
+      max-width: 300px;
+    }
+    button:hover {
+      background-color: #ff856f;
     }
     .repo {
-      border: 1px solid #ccc;
-      margin: 6px 0;
-      padding: 8px;
-      background: white;
+      background: #292929;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: inset 0 0 5px #ff6f61;
+    }
+    .repo strong {
+      font-size: 1rem;
+      overflow-wrap: anywhere;
+      color: #ffa38e;
+    }
+    .repo button {
+      width: auto;
+      max-width: none;
+      padding: 0.4rem 1rem;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      background-color: #ff856f;
+      transition: background-color 0.2s ease;
+    }
+    .repo button:hover {
+      background-color: #ffa38e;
+    }
+    #repoList {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+        align-items: stretch;
+      }
+      #app {
+        padding: 1rem 1rem;
+        max-width: 100%;
+      }
+      button {
+        max-width: 100%;
+      }
+      .repo {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .repo button {
+        margin-top: 0.5rem;
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -31,7 +117,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, GithubAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAOnz21ibc6Y0AGhsc5k5cNrnxm2HVnP10",
@@ -53,10 +139,8 @@
     const slug = urlParams.get("slug");
 
     if (slug) {
-      // Viewer mode
       showViewer(slug);
     } else {
-      // Login + repo list mode
       showLogin();
     }
 
@@ -65,7 +149,7 @@
         <h1>ZeroHost</h1>
         <h2>GitHub Repo Host & Viewer</h2>
         <button id="loginBtn">Login with GitHub</button>
-        <div id="repoList"></div>
+        <div id="repoList" aria-live="polite" aria-label="Repository List"></div>
       `;
 
       const loginBtn = document.getElementById("loginBtn");
@@ -81,31 +165,39 @@
           const res = await fetch("https://api.github.com/user/repos", {
             headers: { Authorization: `token ${token}` }
           });
+          if (!res.ok) throw new Error("Failed to fetch repos from GitHub");
           const repos = await res.json();
 
           repoListDiv.innerHTML = "";
           repos.forEach(repo => {
             const div = document.createElement("div");
             div.className = "repo";
-            div.innerHTML = `
-              <strong>${repo.full_name}</strong><br />
-              <button data-owner="${repo.owner.login}" data-name="${repo.name}">Generate Link</button>
-            `;
-            repoListDiv.appendChild(div);
-          });
 
-          document.querySelectorAll("button[data-owner]").forEach(btn => {
-            btn.onclick = async () => {
+            const repoName = document.createElement("strong");
+            repoName.textContent = repo.full_name;
+
+            const genBtn = document.createElement("button");
+            genBtn.textContent = "Generate Link";
+
+            genBtn.onclick = async () => {
               const slug = Math.random().toString(36).substring(2, 8);
-              await addDoc(collection(db, "pages"), {
-                slug,
-                owner: btn.dataset.owner,
-                repo: btn.dataset.name,
-                user: user.email,
-                createdAt: new Date()
-              });
-              alert(`Your sharable link is:\n${window.location.origin}?slug=${slug}`);
+              try {
+                await addDoc(collection(db, "pages"), {
+                  slug,
+                  owner: repo.owner.login,
+                  repo: repo.name,
+                  user: user.email,
+                  createdAt: new Date()
+                });
+                alert(`Your sharable link is:\n${window.location.origin}?slug=${slug}`);
+              } catch(e) {
+                alert("Error saving link: " + e.message);
+              }
             };
+
+            div.appendChild(repoName);
+            div.appendChild(genBtn);
+            repoListDiv.appendChild(div);
           });
         } catch (error) {
           alert("Error logging in or fetching repos: " + error.message);
@@ -115,23 +207,25 @@
 
     async function showViewer(slug) {
       appDiv.innerHTML = "<h2>Loading site...</h2>";
-      // Find page data from Firestore
-      const snapshot = await getDocs(collection(db, "pages"));
-      let match = null;
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.slug === slug) match = data;
-      });
-
-      if (!match) {
-        appDiv.innerHTML = "<h1>404 - Not Found</h1>";
-        return;
-      }
-
       try {
-        const res = await fetch(`https://raw.githubusercontent.com/${match.owner}/${match.repo}/main/index.html`);
+        // Query Firestore for the slug document
+        const q = query(collection(db, "pages"), where("slug", "==", slug));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          appDiv.innerHTML = "<h1>404 - Not Found</h1>";
+          return;
+        }
+
+        // Should be only one document
+        const doc = snapshot.docs[0].data();
+
+        const rawUrl = `https://raw.githubusercontent.com/${doc.owner}/${doc.repo}/main/index.html`;
+
+        const res = await fetch(rawUrl);
         if (!res.ok) throw new Error("Could not fetch index.html from repo");
         const html = await res.text();
+
         appDiv.innerHTML = html;
       } catch (e) {
         appDiv.innerHTML = `<h1>Error loading site:</h1><p>${e.message}</p>`;
