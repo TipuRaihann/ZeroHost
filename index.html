@@ -6,6 +6,7 @@
     <title>ZeroHost - Your Repositories</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Your existing styles unchanged */
         :root {
             --primary-blue: #0070f3;
             --secondary-gray: #666;
@@ -61,6 +62,7 @@
             overflow-y: auto;
             text-align: left;
             padding-right: 0.5rem; /* For scrollbar spacing */
+            role: list;
         }
 
         .repo {
@@ -83,7 +85,7 @@
         .repo strong {
             font-weight: 600;
             font-size: 1.1rem; /* Slightly larger */
-            word-break: break-all;
+            word-break: break-word;
             color: var(--text-color);
             flex-grow: 1; /* Allows name to take more space */
             margin-right: 1rem;
@@ -101,9 +103,14 @@
             font-size: 0.9rem;
         }
 
-        .repo button:hover {
+        .repo button:hover:not(:disabled) {
             background: #005bb5;
             box-shadow: 0 2px 8px rgba(0, 112, 243, 0.3);
+        }
+
+        .repo button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         #logoutBtn {
@@ -149,7 +156,7 @@
     </header>
 
     <div id="repoListContainer">
-        <div id="repoList" aria-live="polite" aria-label="Repository List">
+        <div id="repoList" aria-live="polite" aria-label="Repository List" role="list">
             <div class="empty-state">Loading your repositories...</div>
         </div>
     </div>
@@ -158,7 +165,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         // Firebase configuration (replace with your actual config)
         const firebaseConfig = {
@@ -185,6 +192,16 @@
             window.location.href = "login.html";
         }
 
+        function generateSlug(length = 8) {
+            // safer slug: alphanumeric lowercase only
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let slug = '';
+            for (let i = 0; i < length; i++) {
+                slug += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return slug;
+        }
+
         async function fetchRepos() {
             repoListDiv.innerHTML = '<div class="empty-state">Fetching your repositories from GitHub...</div>';
             try {
@@ -208,29 +225,36 @@
 
                 repoListDiv.innerHTML = ""; // Clear loading state
                 repos.forEach(repo => {
+                    // Safety check for repo properties
+                    if (!repo || !repo.owner || !repo.owner.login || !repo.name) {
+                        return; // skip invalid repos
+                    }
+
                     const div = document.createElement("div");
                     div.className = "repo";
+                    div.setAttribute("role", "listitem");
 
                     const repoName = document.createElement("strong");
-                    repoName.textContent = repo.full_name;
+                    repoName.textContent = repo.full_name || `${repo.owner.login}/${repo.name}`;
 
                     const genBtn = document.createElement("button");
                     genBtn.textContent = "Generate Link";
-                    genBtn.setAttribute("aria-label", `Generate public link for ${repo.full_name}`);
-
+                    genBtn.setAttribute("aria-label", `Generate public link for ${repoName.textContent}`);
 
                     genBtn.onclick = async () => {
                         genBtn.textContent = "Generating...";
                         genBtn.disabled = true;
-                        const slug = Math.random().toString(36).substring(2, 10);
+                        const slug = generateSlug(8);
+
                         try {
                             await addDoc(collection(db, "pages"), {
                                 slug,
                                 owner: repo.owner.login,
                                 repo: repo.name,
                                 user: userEmail,
-                                createdAt: new Date()
+                                createdAt: serverTimestamp()
                             });
+                            // Redirect to show page with slug param
                             window.location.href = `show.html?slug=${slug}`;
                         } catch(e) {
                             alert("Error saving link: " + e.message);
