@@ -3,150 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZeroHost - GitHub Repo Host & Viewer</title>
+  <title>ZeroHost - Your Repos</title>
   <style>
-    /* Reset */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    body, html {
-      margin: 0; padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background-color: #fff;
-      color: #111;
-      min-height: 100vh;
-    }
-    #app {
-      max-width: 600px;
-      width: 100%;
+    body {
       background: #fff;
-      border-radius: 10px;
-      padding: 2.5rem 3rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-      margin: 4rem auto;
-      text-align: center;
+      font-family: Arial, sans-serif;
+      padding: 1rem 2rem;
+      max-width: 700px;
+      margin: 0 auto;
     }
     h1 {
-      font-weight: 700;
-      font-size: 2.5rem;
-      margin-bottom: 0.3rem;
-      color: #000;
-    }
-    h2 {
-      font-weight: 400;
-      font-size: 1.25rem;
-      margin-bottom: 2rem;
-      color: #555;
-    }
-    button {
-      background-color: #000;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 0.75rem 1.5rem;
-      font-weight: 600;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: background-color 0.25s ease;
-      display: inline-block;
-      margin-top: 1.5rem;
-      min-width: 180px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-    }
-    button:hover {
-      background-color: #222;
+      text-align: center;
+      margin-bottom: 1rem;
     }
     #repoList {
+      margin-top: 1.5rem;
       max-height: 400px;
       overflow-y: auto;
-      margin-top: 1rem;
       border-top: 1px solid #eee;
       text-align: left;
     }
     .repo {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      background-color: #fafafa;
+      background: #fafafa;
       border: 1px solid #eee;
       border-radius: 6px;
-      padding: 0.8rem 1rem;
+      padding: 10px 16px;
       margin: 0.5rem 0;
-      transition: box-shadow 0.2s ease;
-      cursor: default;
-    }
-    .repo:hover {
-      box-shadow: 0 0 8px rgba(0,0,0,0.08);
+      align-items: center;
     }
     .repo strong {
       font-weight: 600;
       font-size: 1rem;
-      overflow-wrap: anywhere;
-      color: #111;
+      word-break: break-all;
     }
     .repo button {
-      background-color: transparent;
-      border: 1.5px solid #000;
-      padding: 0.4rem 1rem;
-      border-radius: 6px;
+      background: transparent;
+      border: 1.5px solid black;
+      color: black;
       font-weight: 600;
-      color: #000;
+      padding: 6px 16px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-      width: auto;
-      max-width: none;
+      transition: all 0.2s ease;
     }
     .repo button:hover {
-      background-color: #000;
-      color: #fff;
+      background: black;
+      color: white;
     }
-    a.back-btn {
-      display: inline-block;
-      margin-top: 2rem;
-      font-weight: 600;
-      color: #000;
-      text-decoration: none;
-      border: 1.5px solid #000;
-      padding: 0.5rem 1.25rem;
+    #logoutBtn {
+      display: block;
+      margin: 1rem auto 0;
+      background: #900;
+      color: white;
+      border: none;
+      padding: 10px 25px;
       border-radius: 6px;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      font-weight: 600;
+      cursor: pointer;
     }
-    a.back-btn:hover {
-      background-color: #000;
-      color: #fff;
-    }
-    @media (max-width: 640px) {
-      #app {
-        padding: 2rem 1.5rem;
-        margin: 2rem 1rem;
-      }
-      button, .repo button, a.back-btn {
-        width: 100%;
-        min-width: unset;
-        font-size: 1rem;
-      }
-      .repo {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .repo button {
-        margin-top: 0.6rem;
-        width: 100%;
-      }
-      #repoList {
-        max-height: 300px;
-      }
+    #logoutBtn:hover {
+      background: #b00;
     }
   </style>
 </head>
 <body>
-  <div id="app" role="main" aria-live="polite"></div>
+  <h1>Your GitHub Repositories</h1>
+  <div id="repoList" aria-live="polite" aria-label="Repository List"></div>
+  <button id="logoutBtn" aria-label="Logout">Logout</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, GithubAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAOnz21ibc6Y0AGhsc5k5cNrnxm2HVnP10",
@@ -159,123 +88,77 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GithubAuthProvider();
     const db = getFirestore(app);
 
-    const appDiv = document.getElementById("app");
-    const urlParams = new URLSearchParams(window.location.search);
-    const slug = urlParams.get("slug");
-    const page = urlParams.get("page"); // To show confirmation page
+    const token = localStorage.getItem("githubToken");
+    const userEmail = localStorage.getItem("userEmail");
+    const repoListDiv = document.getElementById("repoList");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-    if (page === "generated") {
-      const generatedSlug = urlParams.get("slug");
-      showGeneratedPage(generatedSlug);
-    }
-    else if (slug) {
-      showViewer(slug);
-    } else {
-      showLogin();
+    if (!token || !userEmail) {
+      alert("No login found, redirecting to login page.");
+      window.location.href = "login.html";
     }
 
-    function showGeneratedPage(generatedSlug) {
-      appDiv.innerHTML = `
-        <h1>🎉 Congratulations!</h1>
-        <h2>Here is your shareable link:</h2>
-        <p><a href="${window.location.origin}?slug=${generatedSlug}" target="_blank" rel="noopener noreferrer" style="color:#000; font-weight:600;">${window.location.origin}?slug=${generatedSlug}</a></p>
-        <a class="back-btn" href="${window.location.origin}">Back to Home</a>
-      `;
-      document.body.style.backgroundColor = "#fff";
-    }
-
-    async function showLogin() {
-      document.body.style.backgroundColor = "#fff";
-      appDiv.innerHTML = `
-        <h1>ZeroHost</h1>
-        <h2>GitHub Repo Host & Viewer</h2>
-        <button id="loginBtn" aria-label="Login with GitHub">Login with GitHub</button>
-        <div id="repoList" aria-live="polite" aria-label="Repository List"></div>
-      `;
-
-      const loginBtn = document.getElementById("loginBtn");
-      const repoListDiv = document.getElementById("repoList");
-
-      loginBtn.onclick = async () => {
-        try {
-          const result = await signInWithPopup(auth, provider);
-          const token = result._tokenResponse.oauthAccessToken;
-          const user = result.user;
-          loginBtn.style.display = 'none';
-
-          const res = await fetch("https://api.github.com/user/repos", {
-            headers: { Authorization: `token ${token}` }
-          });
-          if (!res.ok) throw new Error("Failed to fetch repos from GitHub");
-          const repos = await res.json();
-
-          repoListDiv.innerHTML = "";
-          repos.forEach(repo => {
-            const div = document.createElement("div");
-            div.className = "repo";
-
-            const repoName = document.createElement("strong");
-            repoName.textContent = repo.full_name;
-
-            const genBtn = document.createElement("button");
-            genBtn.textContent = "Generate Link";
-
-            genBtn.onclick = async () => {
-              const slug = Math.random().toString(36).substring(2, 8);
-              try {
-                await addDoc(collection(db, "pages"), {
-                  slug,
-                  owner: repo.owner.login,
-                  repo: repo.name,
-                  user: user.email,
-                  createdAt: new Date()
-                });
-                // Open new page with confirmation and link
-                window.open(`${window.location.origin}?page=generated&slug=${slug}`, "_blank");
-              } catch(e) {
-                alert("Error saving link: " + e.message);
-              }
-            };
-
-            div.appendChild(repoName);
-            div.appendChild(genBtn);
-            repoListDiv.appendChild(div);
-          });
-        } catch (error) {
-          alert("Error logging in or fetching repos: " + error.message);
-        }
-      };
-    }
-
-    async function showViewer(slug) {
-      document.body.style.backgroundColor = "#fff";
-      appDiv.innerHTML = "<h2>Loading site...</h2>";
+    async function fetchRepos() {
       try {
-        const q = query(collection(db, "pages"), where("slug", "==", slug));
-        const snapshot = await getDocs(q);
+        const res = await fetch("https://api.github.com/user/repos?per_page=100", {
+          headers: { Authorization: `token ${token}` }
+        });
+        if (!res.ok) throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
 
-        if (snapshot.empty) {
-          appDiv.innerHTML = "<h1>404 - Not Found</h1>";
+        const repos = await res.json();
+
+        if (!Array.isArray(repos) || repos.length === 0) {
+          repoListDiv.innerHTML = "<p style='color:#888;'>No repositories found in your GitHub account.</p>";
           return;
         }
 
-        const doc = snapshot.docs[0].data();
+        repoListDiv.innerHTML = "";
+        repos.forEach(repo => {
+          const div = document.createElement("div");
+          div.className = "repo";
 
-        const rawUrl = `https://raw.githubusercontent.com/${doc.owner}/${doc.repo}/main/index.html`;
+          const repoName = document.createElement("strong");
+          repoName.textContent = repo.full_name;
 
-        const res = await fetch(rawUrl);
-        if (!res.ok) throw new Error("Could not fetch index.html from repo");
-        const html = await res.text();
+          const genBtn = document.createElement("button");
+          genBtn.textContent = "Generate Link";
 
-        appDiv.innerHTML = html;
-      } catch (e) {
-        appDiv.innerHTML = `<h1>Error loading site:</h1><p>${e.message}</p>`;
+          genBtn.onclick = async () => {
+            const slug = Math.random().toString(36).substring(2, 10);
+            try {
+              await addDoc(collection(db, "pages"), {
+                slug,
+                owner: repo.owner.login,
+                repo: repo.name,
+                user: userEmail,
+                createdAt: new Date()
+              });
+              // Redirect to show.html with slug param
+              window.location.href = `show.html?slug=${slug}`;
+            } catch(e) {
+              alert("Error saving link: " + e.message);
+            }
+          };
+
+          div.appendChild(repoName);
+          div.appendChild(genBtn);
+          repoListDiv.appendChild(div);
+        });
+
+      } catch (error) {
+        repoListDiv.innerHTML = `<p style="color:red;">Error fetching repos: ${error.message}</p>`;
       }
     }
+
+    logoutBtn.onclick = () => {
+      localStorage.removeItem("githubToken");
+      localStorage.removeItem("userEmail");
+      window.location.href = "login.html";
+    };
+
+    fetchRepos();
   </script>
 </body>
 </html>
