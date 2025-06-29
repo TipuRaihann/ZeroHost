@@ -9,38 +9,34 @@
     *, *::before, *::after {
       box-sizing: border-box;
     }
-    body {
+    body, html {
       margin: 0; padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       background-color: #fff;
       color: #111;
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 3rem 1rem;
     }
     #app {
       max-width: 600px;
       width: 100%;
       background: #fff;
       border-radius: 10px;
-      padding: 2rem 2.5rem;
+      padding: 2.5rem 3rem;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      margin: 4rem auto;
+      text-align: center;
     }
     h1 {
       font-weight: 700;
       font-size: 2.5rem;
-      margin: 0 0 0.3rem 0;
-      text-align: center;
+      margin-bottom: 0.3rem;
       color: #000;
     }
     h2 {
       font-weight: 400;
       font-size: 1.25rem;
-      margin: 0 0 2rem 0;
-      text-align: center;
+      margin-bottom: 2rem;
       color: #555;
     }
     button {
@@ -48,15 +44,15 @@
       color: #fff;
       border: none;
       border-radius: 6px;
-      padding: 0.65rem 1.25rem;
+      padding: 0.75rem 1.5rem;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 1.1rem;
       cursor: pointer;
       transition: background-color 0.25s ease;
-      display: block;
-      margin: 0 auto 2rem auto;
-      width: 100%;
-      max-width: 300px;
+      display: inline-block;
+      margin-top: 1.5rem;
+      min-width: 180px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     }
     button:hover {
       background-color: #222;
@@ -66,6 +62,7 @@
       overflow-y: auto;
       margin-top: 1rem;
       border-top: 1px solid #eee;
+      text-align: left;
     }
     .repo {
       display: flex;
@@ -104,17 +101,30 @@
       background-color: #000;
       color: #fff;
     }
+    a.back-btn {
+      display: inline-block;
+      margin-top: 2rem;
+      font-weight: 600;
+      color: #000;
+      text-decoration: none;
+      border: 1.5px solid #000;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    a.back-btn:hover {
+      background-color: #000;
+      color: #fff;
+    }
     @media (max-width: 640px) {
-      body {
-        padding: 1.5rem 1rem;
-        align-items: stretch;
-      }
       #app {
-        padding: 1.5rem 1.5rem;
-        max-width: 100%;
+        padding: 2rem 1.5rem;
+        margin: 2rem 1rem;
       }
-      button {
-        max-width: 100%;
+      button, .repo button, a.back-btn {
+        width: 100%;
+        min-width: unset;
+        font-size: 1rem;
       }
       .repo {
         flex-direction: column;
@@ -124,11 +134,14 @@
         margin-top: 0.6rem;
         width: 100%;
       }
+      #repoList {
+        max-height: 300px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="app" role="main"></div>
+  <div id="app" role="main" aria-live="polite"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -153,14 +166,30 @@
     const appDiv = document.getElementById("app");
     const urlParams = new URLSearchParams(window.location.search);
     const slug = urlParams.get("slug");
+    const page = urlParams.get("page"); // To show confirmation page
 
-    if (slug) {
+    if (page === "generated") {
+      const generatedSlug = urlParams.get("slug");
+      showGeneratedPage(generatedSlug);
+    }
+    else if (slug) {
       showViewer(slug);
     } else {
       showLogin();
     }
 
+    function showGeneratedPage(generatedSlug) {
+      appDiv.innerHTML = `
+        <h1>🎉 Congratulations!</h1>
+        <h2>Here is your shareable link:</h2>
+        <p><a href="${window.location.origin}?slug=${generatedSlug}" target="_blank" rel="noopener noreferrer" style="color:#000; font-weight:600;">${window.location.origin}?slug=${generatedSlug}</a></p>
+        <a class="back-btn" href="${window.location.origin}">Back to Home</a>
+      `;
+      document.body.style.backgroundColor = "#fff";
+    }
+
     async function showLogin() {
+      document.body.style.backgroundColor = "#fff";
       appDiv.innerHTML = `
         <h1>ZeroHost</h1>
         <h2>GitHub Repo Host & Viewer</h2>
@@ -205,7 +234,8 @@
                   user: user.email,
                   createdAt: new Date()
                 });
-                alert(`Your sharable link is:\n${window.location.origin}?slug=${slug}`);
+                // Open new page with confirmation and link
+                window.open(`${window.location.origin}?page=generated&slug=${slug}`, "_blank");
               } catch(e) {
                 alert("Error saving link: " + e.message);
               }
@@ -222,6 +252,7 @@
     }
 
     async function showViewer(slug) {
+      document.body.style.backgroundColor = "#fff";
       appDiv.innerHTML = "<h2>Loading site...</h2>";
       try {
         const q = query(collection(db, "pages"), where("slug", "==", slug));
