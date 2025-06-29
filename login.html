@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZeroHost - Login</title>
+  <style>
+    body {
+      background: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    #app {
+      max-width: 400px;
+      width: 100%;
+      padding: 2rem 3rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 { margin-bottom: 1rem; }
+    button {
+      background: black;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      transition: background-color 0.25s ease;
+    }
+    button:hover {
+      background-color: #222;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main">
+    <h1>ZeroHost</h1>
+    <button id="loginBtn" aria-label="Login with GitHub">Login with GitHub</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, GithubAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOnz21ibc6Y0AGhsc5k5cNrnxm2HVnP10",
+      authDomain: "zero-host.firebaseapp.com",
+      projectId: "zero-host",
+      storageBucket: "zero-host.appspot.com",
+      messagingSenderId: "528079836587",
+      appId: "1:528079836587:web:098e3c18b90e6b77c66eee",
+      measurementId: "G-F3DP7N7QQQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GithubAuthProvider();
+    provider.addScope('repo');
+
+    document.getElementById("loginBtn").onclick = async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const credential = GithubAuthProvider.credentialFromResult(result);
+        const token = credential.accessToken;
+        const user = result.user;
+        // Save token & user email to localStorage for index.html
+        localStorage.setItem("githubToken", token);
+        localStorage.setItem("userEmail", user.email);
+        // Redirect to index.html
+        window.location.href = "index.html";
+      } catch (error) {
+        alert("Login failed: " + error.message);
+      }
+    };
+  </script>
+</body>
+</html>
