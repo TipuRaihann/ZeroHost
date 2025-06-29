@@ -1,91 +1,276 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZeroHost - Link Generated</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fff;
-      color: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      text-align: center;
-    }
-    #container {
-      max-width: 600px;
-      padding: 2rem 3rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-      border-radius: 10px;
-    }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
-    h2 {
-      font-weight: 400;
-      color: #555;
-      margin-bottom: 2rem;
-    }
-    a.share-link {
-      display: inline-block;
-      font-weight: 600;
-      font-size: 1.2rem;
-      color: #000;
-      text-decoration: none;
-      border: 2px solid #000;
-      padding: 0.5rem 1.25rem;
-      border-radius: 6px;
-      margin-bottom: 2rem;
-      word-break: break-all;
-    }
-    a.share-link:hover {
-      background: #000;
-      color: #fff;
-    }
-    a.back-btn {
-      display: inline-block;
-      font-weight: 600;
-      color: #000;
-      text-decoration: none;
-      border: 1.5px solid #000;
-      padding: 0.5rem 1.25rem;
-      border-radius: 6px;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-    a.back-btn:hover {
-      background-color: #000;
-      color: #fff;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ZeroHost - Link Generated!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #00b050; /* A pleasant green for success */
+            --text-color: #333;
+            --secondary-text: #666;
+            --border-color: #e0e0e0;
+            --bg-light: #f7f7f7;
+            --card-bg: #ffffff;
+            --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --border-radius: 12px;
+            --button-hover-dark: #008f40;
+            --copy-button-bg: #f0f0f0;
+            --copy-button-border: #ccc;
+            --copy-button-hover: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        #container {
+            max-width: 650px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 3rem 2.5rem;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: var(--text-color);
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 span.icon {
+            margin-right: 15px;
+            font-size: 3.5rem;
+            line-height: 1;
+            color: var(--primary-green);
+        }
+
+        h2 {
+            font-weight: 500;
+            font-size: 1.3rem;
+            color: var(--secondary-text);
+            margin-bottom: 2.5rem;
+        }
+
+        .link-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--copy-button-bg);
+            border: 1px solid var(--copy-button-border);
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1rem;
+            margin-bottom: 2.5rem;
+            gap: 10px;
+            overflow: hidden; /* For long URLs */
+            word-break: break-all;
+            position: relative;
+        }
+
+        a.share-link {
+            flex-grow: 1;
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: var(--primary-green);
+            text-decoration: none;
+            text-align: left;
+            white-space: nowrap; /* Prevent wrapping inside */
+            overflow-x: auto; /* Allow horizontal scrolling */
+            -webkit-overflow-scrolling: touch; /* For smoother scrolling on iOS */
+            padding-right: 10px; /* Space for scrollbar if present */
+        }
+
+        /* Hide scrollbar but allow scrolling */
+        a.share-link::-webkit-scrollbar {
+            height: 4px;
+        }
+        a.share-link::-webkit-scrollbar-track {
+            background: transparent; /* Make track transparent */
+        }
+        a.share-link::-webkit-scrollbar-thumb {
+            background: #d4d4d4; /* Color of the scroll thumb */
+            border-radius: 2px;
+        }
+        a.share-link::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+
+        button#copyLinkBtn {
+            background: var(--card-bg);
+            border: 1px solid var(--copy-button-border);
+            color: var(--text-color);
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
+        button#copyLinkBtn:hover {
+            background: var(--copy-button-hover);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        button#copyLinkBtn:active {
+            background: #dcdcdc;
+            transform: translateY(1px);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem; /* Space between buttons */
+            margin-top: 1.5rem;
+        }
+
+        a.back-btn {
+            display: inline-block;
+            font-weight: 600;
+            color: var(--text-color);
+            text-decoration: none;
+            border: 1.5px solid var(--text-color);
+            padding: 0.8rem 1.8rem;
+            border-radius: 8px;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            font-size: 1rem;
+        }
+
+        a.back-btn:hover {
+            background-color: var(--text-color);
+            color: var(--card-bg);
+            border-color: var(--text-color);
+        }
+
+        /* Success message for copy */
+        .copy-success-message {
+            margin-top: 10px;
+            color: var(--primary-green);
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            font-size: 0.9rem;
+        }
+        .copy-success-message.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            #container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            h1 span.icon {
+                font-size: 2.5rem;
+            }
+            h2 {
+                font-size: 1.1rem;
+            }
+            .link-display {
+                flex-direction: column;
+                padding: 0.5rem;
+            }
+            a.share-link {
+                text-align: center;
+                padding-right: 0;
+            }
+            button#copyLinkBtn {
+                width: calc(100% - 2rem); /* Full width minus padding */
+                margin-top: 10px;
+            }
+            .actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            a.back-btn {
+                width: calc(100% - 3.6rem); /* Full width minus padding */
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="container">
-    <h1>🎉 Congratulations!</h1>
-    <h2>Your shareable link is ready:</h2>
-    <a href="#" id="shareLink" class="share-link" target="_blank" rel="noopener noreferrer"></a>
-    <br />
-    <a href="index.html" class="back-btn">Back to Home</a>
-  </div>
+    <div id="container">
+        <h1><span class="icon">🚀</span> Link Generated!</h1>
+        <h2>Your project is now live and ready to be shared:</h2>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const slug = params.get("slug");
+        <div class="link-display">
+            <a href="#" id="shareLink" class="share-link" target="_blank" rel="noopener noreferrer"></a>
+            <button id="copyLinkBtn">Copy Link</button>
+        </div>
+        <div id="copySuccessMessage" class="copy-success-message" aria-live="polite">Link copied to clipboard!</div>
 
-    const shareLink = document.getElementById("shareLink");
+        <div class="actions">
+            <a href="index.html" class="back-btn">Go to My Repos</a>
+        </div>
+    </div>
 
-    if (slug) {
-      const url = `${window.location.origin}/link.html?slug=${slug}`;
-      shareLink.href = url;
-      shareLink.textContent = url;
-    } else {
-      shareLink.textContent = "Invalid or missing link.";
-      shareLink.href = "#";
-    }
-  </script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const slug = params.get("slug");
+
+        const shareLink = document.getElementById("shareLink");
+        const copyLinkBtn = document.getElementById("copyLinkBtn");
+        const copySuccessMessage = document.getElementById("copySuccessMessage");
+
+        let generatedUrl = "";
+
+        if (slug) {
+            // Construct the full URL for the hosted page
+            // Assuming your hosted pages are served from a base path like /link.html
+            // Adjust 'link.html' if your actual hosted page path is different (e.g., /pages/)
+            generatedUrl = `${window.location.origin}/link.html?slug=${slug}`;
+            shareLink.href = generatedUrl;
+            shareLink.textContent = generatedUrl;
+        } else {
+            shareLink.textContent = "Error: No link found.";
+            shareLink.href = "#";
+            copyLinkBtn.disabled = true; // Disable copy if no link
+            copyLinkBtn.textContent = "N/A";
+        }
+
+        copyLinkBtn.addEventListener("click", async () => {
+            if (generatedUrl) {
+                try {
+                    await navigator.clipboard.writeText(generatedUrl);
+                    copySuccessMessage.textContent = "Link copied to clipboard!";
+                    copySuccessMessage.classList.add("show");
+                    setTimeout(() => {
+                        copySuccessMessage.classList.remove("show");
+                    }, 2000); // Hide message after 2 seconds
+                } catch (err) {
+                    console.error("Failed to copy text: ", err);
+                    copySuccessMessage.textContent = "Failed to copy link. Please try manually.";
+                    copySuccessMessage.style.color = "red";
+                    copySuccessMessage.classList.add("show");
+                    setTimeout(() => {
+                        copySuccessMessage.classList.remove("show");
+                        copySuccessMessage.style.color = ""; // Reset color
+                    }, 3000);
+                }
+            }
+        });
+    </script>
 </body>
 </html>
